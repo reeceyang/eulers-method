@@ -1,70 +1,107 @@
-<head>
-	<!-- Load plotly.js into the DOM -->
-	<script src="plotly-latest.min.js"></script>
-</head>
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>euler's method</title>
+    <script src="plotly-latest.min.js"></script>
+  </head>
+  <body>
+    <p>f = (p) => {</p>
+    <textarea id="f" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea><br>
+    <p>};</p>
+    <p>x0: <input href="#" type="text" id="x0" autocomplete="off" value="0">
+    y0: <input href="#" type="text" id="y0" autocomplete="off" value="1"></p>
+    <p>h: <input href="#" type="text" id="h" autocomplete="off" value="1"></p>
+    <p>end: <input href="#" type="text" id="end" autocomplete="off" value="10"></p>
+    <button id="refresh">refresh</button>
+  	<div id='myDiv'><!-- Plotly chart will be drawn inside this DIV --></div>
+  </body>
+</html>
 
-<body>
-	<div id='myDiv'><!-- Plotly chart will be drawn inside this DIV --></div>
-</body>
+
 <script>
-f = (p) => {
-  return p[1];
-};
+document.getElementById("f").value = "return p[1];";
 
-var p0 = [0,1];
+document.getElementById("refresh").addEventListener("click", () => {refresh();});
 
-euler = (pOld, f, h) => {
-  return [pOld[0] + h, pOld[1] + h * f(pOld)];
-};
+refresh = () => {
+  f = new Function(["p"], document.getElementById("f").value);
+  var p0 = [Number(document.getElementById("x0").value),Number(document.getElementById("y0").value)];
+  var h = Number(document.getElementById("h").value);
+  var end = Number(document.getElementById("end").value);
 
-improvedEuler = (pOld, f, h) => {
-  var k1 = h * f(pOld);
-  var k2 = h * f([pOld[0], pOld[1] + k1]);
-  return [pOld[0] + h, pOld[1] + 0.5 * (k1 + k2)];
-};
+  euler = (pOld, f, h) => {
+    return [pOld[0] + h, pOld[1] + h * f(pOld)];
+  };
 
-var exactSolution = {
-  x: [p0[0]],
-  y: [p0[1]],
-  type: "scatter",
-  name: "exact"
-};
+  improvedEuler = (pOld, f, h) => {
+    var k1 = h * f(pOld);
+    var k2 = h * f([pOld[0], pOld[1] + k1]);
+    return [pOld[0] + h, pOld[1] + 0.5 * (k1 + k2)];
+  };
 
-var eulerSolution = {
-  x: [p0[0]],
-  y: [p0[1]],
-  type: "scatter",
-  name: "euler"
-};
+  rungeKutta = (pOld, f, h) => {
+    var k1 = h * f(pOld);
+    var k2 = h * f([pOld[0] + 0.5 * h, pOld[1] + 0.5 * k1]);
+    var k3 = h * f([pOld[0] + 0.5 * h, pOld[1] + 0.5 * k2]);
+    var k4 = h * f([pOld[0] + h, pOld[1] + k3]);
+    return [pOld[0] + h, pOld[1] + (1.0 / 6) * (k1 + k4) + (2.0 / 6) * (k2 + k3)]
+  }
 
-var improvedEulerSolution = {
-  x: [p0[0]],
-  y: [p0[1]],
-  type: "scatter",
-  name: "improved euler"
-};
+  var exactSolution = {
+    x: [p0[0]],
+    y: [p0[1]],
+    type: "scatter",
+    name: "exact"
+  };
 
-var h = 0.1;
-var end = 10;
+  var eulerSolution = {
+    x: [p0[0]],
+    y: [p0[1]],
+    type: "scatter",
+    name: "euler"
+  };
 
-var i;
-for (i = p0[0] + h; i <= end; i += h) {
-  console.log(i);
-  exactSolution.x.push(i);
-  exactSolution.y.push(Math.exp(i));
+  var improvedEulerSolution = {
+    x: [p0[0]],
+    y: [p0[1]],
+    type: "scatter",
+    name: "improved euler"
+  };
 
-  oldEuler = [eulerSolution.x[eulerSolution.x.length - 1], eulerSolution.y[eulerSolution.y.length - 1]];
-  newEuler = euler(oldEuler, f, h);
-  eulerSolution.x.push(newEuler[0]);
-  eulerSolution.y.push(newEuler[1]);
+  var rungeKuttaSolution = {
+    x: [p0[0]],
+    y: [p0[1]],
+    type: "scatter",
+    name: "runge kutta"
+  };
 
-  oldImprovedEuler = [improvedEulerSolution.x[improvedEulerSolution.x.length - 1], improvedEulerSolution.y[improvedEulerSolution.y.length - 1]];
-  newImprovedEuler = improvedEuler(oldImprovedEuler, f, h);
-  improvedEulerSolution.x.push(newImprovedEuler[0]);
-  improvedEulerSolution.y.push(newImprovedEuler[1]);
+  var i;
+  for (i = p0[0] + h; i <= end; i += h) {
+    console.log(i);
+    exactSolution.x.push(i);
+    exactSolution.y.push(Math.exp(i));
+
+    oldEuler = [eulerSolution.x[eulerSolution.x.length - 1], eulerSolution.y[eulerSolution.y.length - 1]];
+    newEuler = euler(oldEuler, f, h);
+    eulerSolution.x.push(newEuler[0]);
+    eulerSolution.y.push(newEuler[1]);
+
+    oldImprovedEuler = [improvedEulerSolution.x[improvedEulerSolution.x.length - 1], improvedEulerSolution.y[improvedEulerSolution.y.length - 1]];
+    newImprovedEuler = improvedEuler(oldImprovedEuler, f, h);
+    improvedEulerSolution.x.push(newImprovedEuler[0]);
+    improvedEulerSolution.y.push(newImprovedEuler[1]);
+
+    oldRungeKutta = [rungeKuttaSolution.x[rungeKuttaSolution.x.length - 1], rungeKuttaSolution.y[rungeKuttaSolution.y.length - 1]];
+    newRungeKutta = rungeKutta(oldRungeKutta, f, h);
+    rungeKuttaSolution.x.push(newRungeKutta[0]);
+    rungeKuttaSolution.y.push(newRungeKutta[1]);
+  }
+
+  var data = [exactSolution, eulerSolution, improvedEulerSolution, rungeKuttaSolution];
+
+  Plotly.newPlot('myDiv', data);
 }
+refresh();
 
-var data = [exactSolution, eulerSolution, improvedEulerSolution];
-
-Plotly.newPlot('myDiv', data);
 </script>
