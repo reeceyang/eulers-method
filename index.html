@@ -1,0 +1,70 @@
+<head>
+	<!-- Load plotly.js into the DOM -->
+	<script src="plotly-latest.min.js"></script>
+</head>
+
+<body>
+	<div id='myDiv'><!-- Plotly chart will be drawn inside this DIV --></div>
+</body>
+<script>
+f = (p) => {
+  return p[1];
+};
+
+var p0 = [0,1];
+
+euler = (pOld, f, h) => {
+  return [pOld[0] + h, pOld[1] + h * f(pOld)];
+};
+
+improvedEuler = (pOld, f, h) => {
+  var k1 = h * f(pOld);
+  var k2 = h * f([pOld[0], pOld[1] + k1]);
+  return [pOld[0] + h, pOld[1] + 0.5 * (k1 + k2)];
+};
+
+var exactSolution = {
+  x: [p0[0]],
+  y: [p0[1]],
+  type: "scatter",
+  name: "exact"
+};
+
+var eulerSolution = {
+  x: [p0[0]],
+  y: [p0[1]],
+  type: "scatter",
+  name: "euler"
+};
+
+var improvedEulerSolution = {
+  x: [p0[0]],
+  y: [p0[1]],
+  type: "scatter",
+  name: "improved euler"
+};
+
+var h = 0.1;
+var end = 10;
+
+var i;
+for (i = p0[0] + h; i <= end; i += h) {
+  console.log(i);
+  exactSolution.x.push(i);
+  exactSolution.y.push(Math.exp(i));
+
+  oldEuler = [eulerSolution.x[eulerSolution.x.length - 1], eulerSolution.y[eulerSolution.y.length - 1]];
+  newEuler = euler(oldEuler, f, h);
+  eulerSolution.x.push(newEuler[0]);
+  eulerSolution.y.push(newEuler[1]);
+
+  oldImprovedEuler = [improvedEulerSolution.x[improvedEulerSolution.x.length - 1], improvedEulerSolution.y[improvedEulerSolution.y.length - 1]];
+  newImprovedEuler = improvedEuler(oldImprovedEuler, f, h);
+  improvedEulerSolution.x.push(newImprovedEuler[0]);
+  improvedEulerSolution.y.push(newImprovedEuler[1]);
+}
+
+var data = [exactSolution, eulerSolution, improvedEulerSolution];
+
+Plotly.newPlot('myDiv', data);
+</script>
