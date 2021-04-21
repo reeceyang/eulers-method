@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>lotka–volterra</title>
+    <script src="plotly-latest.min.js"></script>
+    <style media="screen">
+      #myDiv {
+        width: 90vw;
+        height: 90vh;
+      }
+    </style>
+  </head>
+  <body>
+    <p>alpha: <input href="#" type="text" id="alpha" autocomplete="off" value="1"></p>
+    <p>beta: <input href="#" type="text" id="beta" autocomplete="off" value="2"></p>
+    <p>gamma: <input href="#" type="text" id="gamma" autocomplete="off" value="3"></p>
+    <p>delta: <input href="#" type="text" id="delta" autocomplete="off" value="4"></p>
+    <p>x0: <input href="#" type="text" id="x0" autocomplete="off" value="1">
+    y0: <input href="#" type="text" id="y0" autocomplete="off" value="1"></p>
+    <p>h: <input href="#" type="text" id="h" autocomplete="off" value="0.01"></p>
+    <p>t_end: <input href="#" type="text" id="end" autocomplete="off" value="10"></p>
+    <div class="slidecontainer">
+      <input type="range" min="0" max="100" value="100" class="slider" id="myRange">
+    </div>
+    <button id="refresh">refresh</button>
+  	<div id='myDiv'><!-- Plotly chart will be drawn inside this DIV --></div>
+  </body>
+</html>
+
+
+<script>
+refresh = (tend) => {
+  var p0 = [Number(document.getElementById("x0").value),Number(document.getElementById("y0").value)];
+  var h = Number(document.getElementById("h").value);
+
+  var alpha = Number(document.getElementById("alpha").value);
+  var beta = Number(document.getElementById("beta").value);
+  var gamma = Number(document.getElementById("gamma").value);
+  var delta = Number(document.getElementById("delta").value);
+
+  // takes (t,x) and y as arguments, returns x
+  fx = (p, y) => {
+    return alpha * p[1] - beta * p[1] * y;
+  };
+
+  // takes (t,y) and x as arguments, returns y
+  fy = (p, x) => {
+    return -gamma * p[1] + delta * p[1] * x;
+  };
+
+  var t = 0;
+
+  rungeKutta = (pOld, f, h, c) => {
+    var k1 = h * f(pOld, c);
+    var k2 = h * f([pOld[0] + 0.5 * h, pOld[1] + 0.5 * k1], c);
+    var k3 = h * f([pOld[0] + 0.5 * h, pOld[1] + 0.5 * k2], c);
+    var k4 = h * f([pOld[0] + h, pOld[1] + k3], c);
+    return [pOld[0] + h, pOld[1] + (1.0 / 6) * (k1 + k4) + (2.0 / 6) * (k2 + k3)]
+  }
+
+  var sol = {
+    x: [p0[0]],
+    y: [p0[1]],
+    type: "scatter",
+    name: "predator prey model"
+  };
+
+  var i;
+  for (i = t; i <= tend; i += h) {
+
+    old = [sol.x[sol.x.length - 1], sol.y[sol.y.length - 1]];
+    sol.x.push(rungeKutta([i,old[0]], fx, h, old[1])[1]);
+    sol.y.push(rungeKutta([i,old[1]], fy, h, old[0])[1]);
+  }
+
+  var data = [sol];
+  console.log(sol);
+
+  var layout = {
+    title: 'predator-prey model',
+    xaxis: {autorange: false},
+    yaxis: {
+      autorange: false,
+      scaleanchor: "x"
+    },
+  };
+
+  Plotly.newPlot('myDiv', data, layout, {scrollZoom: true});
+};
+
+document.getElementById("refresh").addEventListener("click", () => {refresh(Number(document.getElementById("end").value));});
+
+refresh(Number(document.getElementById("end").value));
+
+var slider = document.getElementById("myRange");
+
+// Update the current slider value (each time you drag the slider handle)
+slider.oninput = function() {
+  var tend = Number(document.getElementById("end").value);
+  refresh((this.value / 100.0) * tend);
+  console.log(this.value);
+  console.log((Number(this.value) / 100.0) * tend);
+};
+</script>
